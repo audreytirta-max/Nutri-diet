@@ -1,784 +1,527 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>NutriTrack</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --brand: #1B5E42;
-    --brand-light: #E8F5EE;
-    --brand-mid: #2E7D57;
-    --accent: #D4A843;
-    --accent-light: #FDF5E0;
-    --bg: #F7F6F2;
-    --surface: #FFFFFF;
-    --text: #1A1A1A;
-    --muted: #7A7A72;
-    --border: rgba(0,0,0,0.08);
-    --radius: 16px;
-    --protein: #2563EB;
-    --carbs: #D4A843;
-    --fat: #E05B30;
-    --fiber: #1B5E42;
-  }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --brand:#1B5E42;--brand-light:#E8F5EE;--accent:#D4A843;
+  --bg:#F7F6F2;--surface:#fff;--text:#1A1A1A;--muted:#7A7A72;--border:rgba(0,0,0,0.08);
+  --radius:16px;--protein:#2563EB;--carbs:#D4A843;--fat:#E05B30;--fiber:#1B5E42;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;position:fixed;width:100%;font-family:'DM Sans',sans-serif;background:#111;color:var(--text)}
+.app{width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex}
+.scroll{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;padding-bottom:calc(80px + var(--sab))}
+.scroll::-webkit-scrollbar{display:none}
 
-  .phone {
-    width: 360px; margin: 0 auto;
-    background: var(--bg);
-    min-height: 100vh;
-    overflow: hidden;
-    position: relative;
-  }
+.bnav{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:.5px solid var(--border);display:flex;z-index:100;padding:10px 0 calc(10px + var(--sab))}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.ni i{font-size:22px;color:var(--muted)}.ni span{font-size:10px;color:var(--muted);font-weight:500}
+.ni.active i,.ni.active span{color:var(--brand)}
+.ncap{width:52px;height:52px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;margin-top:-20px;box-shadow:0 4px 20px rgba(27,94,66,.4);cursor:pointer}
+.ncap i{font-size:24px;color:#fff}
 
-  .screen { display: none; flex-direction: column; min-height: 100vh; }
-  .screen.active { display: flex; }
+/* SETUP */
+.setup-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + var(--sat)) 24px calc(20px + var(--sab));background:var(--brand);overflow-y:auto}
+.scard{width:100%;background:#fff;border-radius:20px;padding:22px}
+.sinput{width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);font-size:14px;font-family:monospace;background:var(--bg);outline:none;color:var(--text);margin-bottom:14px;-webkit-appearance:none}
+.sinput:focus{border-color:var(--brand)}
+.sbtn{width:100%;background:var(--brand);color:#fff;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;-webkit-appearance:none}
 
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 360px; background: var(--surface); border-top: 0.5px solid var(--border);
-    display: flex; z-index: 100; padding: 10px 0 16px;
-  }
-  .nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .nav-item i { font-size: 22px; color: var(--muted); }
-  .nav-item span { font-size: 10px; color: var(--muted); font-weight: 500; }
-  .nav-item.active i { color: var(--brand); }
-  .nav-item.active span { color: var(--brand); }
-  .nav-capture {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: var(--brand); display: flex; align-items: center; justify-content: center;
-    margin-top: -18px; box-shadow: 0 4px 16px rgba(27,94,66,0.35);
-    cursor: pointer; transition: transform 0.15s;
-  }
-  .nav-capture:active { transform: scale(0.95); }
-  .nav-capture i { font-size: 24px; color: white; }
+/* HOME */
+.hdr{background:var(--brand);padding:calc(16px + var(--sat)) 20px 20px;border-radius:0 0 24px 24px;flex-shrink:0}
+.ring{margin:12px auto 0;width:130px;height:130px;position:relative;display:flex;align-items:center;justify-content:center}
+.ring svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.rb{fill:none;stroke:rgba(255,255,255,.2);stroke-width:8}
+.rf{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;stroke-dasharray:352;stroke-dashoffset:352;transition:stroke-dashoffset 1s ease}
+.mpills{display:flex;gap:8px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.mpills::-webkit-scrollbar{display:none}
+.mp{background:var(--surface);border-radius:12px;padding:10px 12px;min-width:76px;text-align:center;border:.5px solid var(--border);flex-shrink:0}
+.mp .v{font-size:14px;font-weight:600}.mp .l{font-size:10px;color:var(--muted);margin-top:1px}
+.mp .b{height:3px;border-radius:2px;margin-top:5px;background:var(--border)}
+.mp .bf{height:3px;border-radius:2px}
+.stitle{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:14px 16px 8px}
+.mc{margin:0 16px 8px;background:var(--surface);border-radius:var(--radius);border:.5px solid var(--border);padding:12px 14px;cursor:pointer}
+.mr{display:flex;align-items:center;gap:10px}
+.mi{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.acard{margin:0 16px 8px;background:var(--brand-light);border-radius:var(--radius);border:.5px solid rgba(27,94,66,.15);padding:12px 14px}
+.abadge{display:inline-block;background:#fff;border-radius:20px;padding:3px 10px;font-size:11px;margin:5px 4px 0 0;color:var(--brand);font-weight:500;border:.5px solid rgba(27,94,66,.2)}
+.addbtn{margin:0 16px 10px;border:1.5px dashed rgba(27,94,66,.3);border-radius:var(--radius);padding:12px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--brand);cursor:pointer;font-size:13px;font-weight:500}
 
-  .home-header {
-    background: var(--brand); padding: 48px 20px 28px;
-    border-radius: 0 0 28px 28px;
-  }
-  .home-greeting { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 2px; }
-  .home-name { font-size: 22px; color: white; font-weight: 600; }
-  .home-date { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+/* CAMERA */
+.cwrap{flex:1;display:flex;flex-direction:column;background:#111;overflow:hidden}
+.chdr{display:flex;align-items:center;gap:12px;padding:calc(16px + var(--sat)) 20px 12px;background:#111;flex-shrink:0}
+.cback{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+#vc{margin:0 16px;border-radius:18px;overflow:hidden;background:#222;position:relative;flex-shrink:0;height:260px;display:flex;align-items:center;justify-content:center}
+#video{width:100%;height:100%;object-fit:cover;display:none}
+#canvas{display:none}
+#vc::before,#vc::after{content:'';position:absolute;width:24px;height:24px;border-color:#fff;border-style:solid;opacity:.5;z-index:2;pointer-events:none}
+#vc::before{top:10px;left:10px;border-width:2px 0 0 2px;border-radius:4px 0 0 0}
+#vc::after{bottom:10px;right:10px;border-width:0 2px 2px 0;border-radius:0 0 4px 0}
+.copts{display:flex;gap:8px;padding:12px 16px;flex-shrink:0}
+.co{flex:1;background:rgba(255,255,255,.07);border-radius:12px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:.5px solid rgba(255,255,255,.1)}
+.co i{font-size:20px;color:#fff}.co span{font-size:10px;color:rgba(255,255,255,.6)}
+.ccta{margin:0 16px;background:var(--accent);border-radius:14px;padding:15px;text-align:center;cursor:pointer;font-weight:600;font-size:15px;color:#1A1000;flex-shrink:0}
+.aoverlay{position:absolute;inset:0;background:rgba(0,0,0,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:10}
+.asp{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.astep{font-size:12px;color:rgba(255,255,255,.35);transition:color .3s}
+.astep.active{color:#fff;font-weight:500}
 
-  .calorie-ring {
-    margin: 16px auto 0; width: 140px; height: 140px; position: relative;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .ring-svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
-  .ring-bg { fill: none; stroke: rgba(255,255,255,0.2); stroke-width: 8; }
-  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round;
-    stroke-dasharray: 377; stroke-dashoffset: 113; }
-  .ring-center { text-align: center; z-index: 1; }
-  .ring-cal { font-size: 26px; font-weight: 600; color: white; line-height: 1; }
-  .ring-label { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 2px; }
-  .ring-remain { font-size: 12px; color: var(--accent); font-weight: 500; margin-top: 4px; }
+/* ANALYSIS */
+.anhdr{background:var(--surface);padding:calc(16px + var(--sat)) 16px 14px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.bbtn{width:36px;height:36px;border-radius:50%;border:.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.mthumb{margin:12px 16px;border-radius:var(--radius);overflow:hidden;height:160px;object-fit:cover;width:calc(100% - 32px);display:block}
+.mthph{height:140px;margin:12px 16px;border-radius:var(--radius);background:linear-gradient(135deg,#1B3A2A,#2E7D57);display:flex;align-items:center;justify-content:center;font-size:44px;letter-spacing:10px}
+.fi{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:12px;padding:10px 12px;margin-bottom:8px;border:.5px solid var(--border)}
+.ngrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 16px 14px}
+.nc{background:var(--surface);border-radius:12px;padding:11px 12px;border:.5px solid var(--border)}
+.nv{font-size:18px;font-weight:600}.nl{font-size:11px;color:var(--muted);margin-top:1px}
+.nb{height:3px;border-radius:2px;background:var(--border);margin-top:7px}
+.nbf{height:3px;border-radius:2px}
+.trow{margin:0 16px;background:var(--brand);border-radius:var(--radius);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.savebtn{margin:12px 16px calc(16px + var(--sab));background:var(--brand);border-radius:14px;padding:15px;text-align:center;cursor:pointer;font-weight:600;font-size:15px;color:#fff}
 
-  .macro-pills {
-    display: flex; gap: 8px; padding: 16px 20px 0; overflow-x: auto; scrollbar-width: none;
-  }
-  .macro-pill {
-    background: var(--surface); border-radius: 12px; padding: 10px 14px;
-    min-width: 80px; text-align: center; border: 0.5px solid var(--border);
-  }
-  .macro-pill .val { font-size: 15px; font-weight: 600; }
-  .macro-pill .lbl { font-size: 10px; color: var(--muted); margin-top: 1px; }
-  .macro-pill .bar { height: 3px; border-radius: 2px; margin-top: 6px; background: var(--border); }
-  .macro-pill .bar-fill { height: 3px; border-radius: 2px; }
+/* EXPORT */
+.exhdr{background:var(--surface);padding:calc(16px + var(--sat)) 16px 14px;border-bottom:.5px solid var(--border);flex-shrink:0}
+.periods{display:flex;gap:8px;padding:12px 16px 6px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.periods::-webkit-scrollbar{display:none}
+.pchip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:500;border:.5px solid var(--border);background:var(--surface);cursor:pointer;white-space:nowrap;color:var(--muted)}
+.pchip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.eprev{margin:6px 16px;background:var(--surface);border-radius:var(--radius);border:.5px solid var(--border);overflow:hidden}
+.exhd{background:#1D6F42;padding:9px 12px;display:flex;align-items:center;gap:8px}
+.exrow{display:flex;border-bottom:.5px solid var(--border)}
+.exrow.hd{background:#F0F7F3}
+.exc{padding:6px 7px;border-right:.5px solid var(--border);overflow:hidden;white-space:nowrap;font-size:10px}
+.exc:last-child{border-right:none}
+.exrow.hd .exc{font-weight:600;color:var(--brand);font-size:9px}
+.exopts{padding:0 16px}
+.exopt{background:var(--surface);border-radius:12px;padding:12px 14px;border:.5px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.exoi{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.excta{margin:12px 16px calc(16px + var(--sab));background:#1D6F42;border-radius:14px;padding:15px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-weight:600;font-size:15px;color:#fff}
 
-  .section-title {
-    font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em;
-    text-transform: uppercase; padding: 20px 20px 10px;
-  }
-
-  .meal-card {
-    margin: 0 20px 10px; background: var(--surface); border-radius: var(--radius);
-    border: 0.5px solid var(--border); padding: 14px 16px; cursor: pointer;
-    transition: transform 0.15s;
-  }
-  .meal-card:active { transform: scale(0.98); }
-  .meal-row { display: flex; align-items: center; gap: 12px; }
-  .meal-icon { width: 38px; height: 38px; border-radius: 10px; display: flex;
-    align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .meal-info { flex: 1; }
-  .meal-name { font-size: 14px; font-weight: 500; }
-  .meal-items { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .meal-cal { font-size: 15px; font-weight: 600; color: var(--brand); }
-  .meal-cal-lbl { font-size: 10px; color: var(--muted); }
-  .add-meal-btn {
-    margin: 0 20px 10px; border: 1.5px dashed rgba(27,94,66,0.3); border-radius: var(--radius);
-    padding: 14px; display: flex; align-items: center; gap: 8px;
-    color: var(--brand); cursor: pointer; font-size: 13px; font-weight: 500;
-  }
-
-  .ai-card {
-    margin: 0 20px 10px; background: var(--brand-light); border-radius: var(--radius);
-    border: 0.5px solid rgba(27,94,66,0.15); padding: 14px 16px;
-  }
-  .ai-tag { font-size: 10px; font-weight: 600; color: var(--brand); letter-spacing: 0.06em;
-    text-transform: uppercase; margin-bottom: 6px; }
-  .ai-msg { font-size: 13px; color: #2A4A38; line-height: 1.5; }
-  .ai-badge { display: inline-block; background: white; border-radius: 20px;
-    padding: 4px 10px; font-size: 11px; margin: 6px 4px 0 0; color: var(--brand); font-weight: 500;
-    border: 0.5px solid rgba(27,94,66,0.2); }
-
-  .cam-screen { background: #111; }
-  .cam-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 52px 20px 16px; background: #111;
-  }
-  .cam-back { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; }
-  .cam-back i { font-size: 18px; color: white; }
-  .cam-title { font-size: 16px; font-weight: 500; color: white; }
-
-  .cam-preview {
-    margin: 0 20px; height: 280px; border-radius: 20px; overflow: hidden;
-    background: #222; position: relative; display: flex; align-items: center; justify-content: center;
-  }
-  .cam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .cam-placeholder i { font-size: 40px; color: rgba(255,255,255,0.25); }
-  .cam-placeholder span { font-size: 13px; color: rgba(255,255,255,0.3); }
-  .cam-corners::before, .cam-corners::after {
-    content: ''; position: absolute; width: 28px; height: 28px;
-    border-color: white; border-style: solid; opacity: 0.4;
-  }
-  .cam-corners::before { top: 12px; left: 12px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
-  .cam-corners::after { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
-
-  .meal-preview {
-    margin: 0 20px; height: 280px; border-radius: 20px; overflow: hidden; position: relative;
-    background: linear-gradient(135deg, #2A4A38 0%, #1B5E42 50%, #3D7A5C 100%);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .meal-preview-items { display: flex; gap: 12px; padding: 20px; }
-  .food-blob {
-    background: rgba(255,255,255,0.12); border-radius: 14px; padding: 12px; text-align: center;
-  }
-  .food-blob .emoji { font-size: 28px; }
-  .food-blob .name { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 4px; }
-  .analyzing-overlay {
-    position: absolute; inset: 0; background: rgba(0,0,0,0.55);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  }
-  .analyzing-spinner {
-    width: 36px; height: 36px; border: 2px solid rgba(255,255,255,0.2);
-    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .analyzing-text { font-size: 13px; color: white; font-weight: 500; }
-
-  .cam-options { display: flex; gap: 10px; padding: 16px 20px; }
-  .cam-opt {
-    flex: 1; background: rgba(255,255,255,0.07); border-radius: 12px;
-    padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px;
-    cursor: pointer; border: 0.5px solid rgba(255,255,255,0.1); transition: background 0.15s;
-  }
-  .cam-opt:active { background: rgba(255,255,255,0.12); }
-  .cam-opt i { font-size: 22px; color: white; }
-  .cam-opt span { font-size: 11px; color: rgba(255,255,255,0.6); }
-
-  .cam-cta {
-    margin: 4px 20px 0; background: var(--accent); border-radius: 14px;
-    padding: 15px; text-align: center; cursor: pointer; font-weight: 600;
-    font-size: 15px; color: #1A1000; transition: transform 0.15s;
-  }
-  .cam-cta:active { transform: scale(0.97); }
-
-  .analysis-header {
-    background: var(--surface); padding: 52px 20px 16px;
-    border-bottom: 0.5px solid var(--border);
-    display: flex; align-items: center; gap: 12px;
-  }
-  .back-btn { width: 36px; height: 36px; border-radius: 50%; border: 0.5px solid var(--border);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; }
-  .back-btn i { font-size: 18px; color: var(--text); }
-  .analysis-title { font-size: 17px; font-weight: 600; }
-
-  .meal-photo-thumb {
-    height: 160px; margin: 16px 20px; border-radius: var(--radius); overflow: hidden;
-    background: linear-gradient(135deg, #1B3A2A 0%, #2E7D57 100%);
-    display: flex; align-items: center; justify-content: center; gap: 16px;
-  }
-  .meal-photo-thumb .emoji-lg { font-size: 42px; }
-
-  .food-items-list { padding: 0 20px; }
-  .food-item {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--surface); border-radius: 12px; padding: 12px 14px;
-    margin-bottom: 8px; border: 0.5px solid var(--border);
-  }
-  .food-item-icon { font-size: 22px; width: 36px; text-align: center; }
-  .food-item-info { flex: 1; }
-  .food-item-name { font-size: 14px; font-weight: 500; }
-  .food-item-gram { font-size: 12px; color: var(--muted); }
-  .food-item-cal { font-size: 14px; font-weight: 600; color: var(--brand); }
-  .food-item-edit { width: 28px; height: 28px; border-radius: 8px; background: var(--bg);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; }
-  .food-item-edit i { font-size: 14px; color: var(--muted); }
-
-  .nutrition-grid {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px; padding: 0 20px 16px;
-  }
-  .nutrition-card {
-    background: var(--surface); border-radius: 12px; padding: 12px 14px;
-    border: 0.5px solid var(--border);
-  }
-  .nutrition-card .n-val { font-size: 20px; font-weight: 600; }
-  .nutrition-card .n-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .nutrition-card .n-bar { height: 3px; border-radius: 2px; background: var(--border); margin-top: 8px; }
-  .nutrition-card .n-fill { height: 3px; border-radius: 2px; }
-  .total-row {
-    margin: 0 20px; background: var(--brand); border-radius: var(--radius);
-    padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-  }
-  .save-btn {
-    margin: 16px 20px 100px; background: var(--brand); border-radius: 14px;
-    padding: 15px; text-align: center; cursor: pointer; font-weight: 600;
-    font-size: 15px; color: white; transition: transform 0.15s;
-  }
-  .save-btn:active { transform: scale(0.97); }
-
-  .export-header { background: var(--surface); padding: 52px 20px 16px; border-bottom: 0.5px solid var(--border); }
-  .export-period {
-    display: flex; gap: 8px; padding: 16px 20px 8px; overflow-x: auto; scrollbar-width: none;
-  }
-  .period-chip {
-    padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
-    border: 0.5px solid var(--border); background: var(--surface); cursor: pointer;
-    white-space: nowrap; transition: all 0.15s; color: var(--muted);
-  }
-  .period-chip.active { background: var(--brand); color: white; border-color: var(--brand); }
-
-  .export-preview {
-    margin: 8px 20px; background: var(--surface); border-radius: var(--radius);
-    border: 0.5px solid var(--border); overflow: hidden;
-  }
-  .excel-header {
-    background: #1D6F42; padding: 10px 14px; display: flex; align-items: center; gap: 8px;
-  }
-  .excel-header i { font-size: 18px; color: white; }
-  .excel-header span { font-size: 13px; color: white; font-weight: 500; }
-  .excel-row { display: flex; border-bottom: 0.5px solid var(--border); font-size: 11px; }
-  .excel-row.head { background: #F0F7F3; }
-  .excel-cell { padding: 7px 8px; border-right: 0.5px solid var(--border); overflow: hidden; white-space: nowrap; }
-  .excel-cell:last-child { border-right: none; }
-  .excel-row.head .excel-cell { font-weight: 600; color: var(--brand); font-size: 10px; }
-
-  .export-options { padding: 0 20px; }
-  .export-opt {
-    background: var(--surface); border-radius: 12px; padding: 14px 16px;
-    border: 0.5px solid var(--border); margin-bottom: 8px;
-    display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s;
-  }
-  .export-opt:active { background: var(--bg); }
-  .export-opt-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-  .export-opt-icon i { font-size: 20px; }
-  .export-opt-info { flex: 1; }
-  .export-opt-name { font-size: 14px; font-weight: 500; }
-  .export-opt-desc { font-size: 12px; color: var(--muted); margin-top: 1px; }
-
-  .export-cta {
-    margin: 16px 20px 100px; background: #1D6F42; border-radius: 14px;
-    padding: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;
-    cursor: pointer; font-weight: 600; font-size: 15px; color: white; transition: transform 0.15s;
-  }
-  .export-cta:active { transform: scale(0.97); }
-  .export-cta i { font-size: 20px; }
-
-  .scrollable { overflow-y: auto; flex: 1; padding-bottom: 80px; }
-  .scrollable::-webkit-scrollbar { display: none; }
-
-  .toast {
-    position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--brand); color: white; padding: 10px 20px; border-radius: 20px;
-    font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 200;
-    white-space: nowrap;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast{position:absolute;bottom:calc(88px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:var(--brand);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:300;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
+</head>
+<body>
+<div class="app">
 
-<div class="phone">
+<!-- SETUP -->
+<div id="s-setup" class="screen active">
+<div class="setup-wrap">
+  <div style="font-size:48px;margin-bottom:12px">🥗</div>
+  <div style="font-size:24px;font-weight:600;color:#fff;text-align:center;margin-bottom:6px">NutriTrack</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.65);text-align:center;line-height:1.6;margin-bottom:24px">Hi Audrey! Enter your OpenAI API key to enable AI food detection from real photos.</div>
+  <div class="scard">
+    <div style="font-size:13px;font-weight:600;margin-bottom:6px">OpenAI API Key</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Starts with <code>sk-</code> · Saved on your device only · Get one at platform.openai.com</div>
+    <input type="password" class="sinput" id="akey" placeholder="sk-proj-..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="sbtn" onclick="saveKey()">Start tracking →</button>
+  </div>
+  <div style="margin-top:14px;font-size:11px;color:rgba(255,255,255,.4);text-align:center">🔒 Key stored locally on your device only</div>
+</div>
+</div>
 
-  <!-- SCREEN 1: HOME -->
-  <div class="screen active" id="s-home">
-    <div class="home-header">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div>
-          <div class="home-greeting">Selamat pagi 👋</div>
-          <div class="home-name">Audrey</div>
-          <div class="home-date">Jumat, 29 Mei 2026</div>
-        </div>
-        <div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;">
-          <i class="ti ti-bell" style="font-size:18px;color:white;"></i>
-        </div>
-      </div>
-      <div class="calorie-ring">
-        <svg class="ring-svg" width="140" height="140" viewBox="0 0 140 140">
-          <circle class="ring-bg" cx="70" cy="70" r="60"/>
-          <circle class="ring-fill" cx="70" cy="70" r="60"/>
-        </svg>
-        <div class="ring-center">
-          <div class="ring-cal">1,440</div>
-          <div class="ring-label">calories today</div>
-          <div class="ring-remain">360 remaining</div>
-        </div>
-      </div>
+<!-- HOME -->
+<div id="s-home" class="screen">
+<div class="hdr">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:2px" id="greet">Selamat pagi 👋</div>
+      <div style="font-size:20px;color:#fff;font-weight:600">Audrey</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:1px" id="dtext"></div>
     </div>
-
-    <div class="macro-pills">
-      <div class="macro-pill">
-        <div class="val" style="color:var(--protein)">98g</div>
-        <div class="lbl">Protein</div>
-        <div class="bar"><div class="bar-fill" style="width:70%;background:var(--protein);"></div></div>
-      </div>
-      <div class="macro-pill">
-        <div class="val" style="color:var(--carbs)">162g</div>
-        <div class="lbl">Carbs</div>
-        <div class="bar"><div class="bar-fill" style="width:82%;background:var(--carbs);"></div></div>
-      </div>
-      <div class="macro-pill">
-        <div class="val" style="color:var(--fat)">41g</div>
-        <div class="lbl">Fat</div>
-        <div class="bar"><div class="bar-fill" style="width:55%;background:var(--fat);"></div></div>
-      </div>
-      <div class="macro-pill">
-        <div class="val" style="color:var(--fiber)">14g</div>
-        <div class="lbl">Fiber</div>
-        <div class="bar"><div class="bar-fill" style="width:56%;background:var(--fiber);"></div></div>
-      </div>
-      <div class="macro-pill">
-        <div class="val" style="color:#888">1.4L</div>
-        <div class="lbl">Water</div>
-        <div class="bar"><div class="bar-fill" style="width:47%;background:#6BB5D6;"></div></div>
-      </div>
+    <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center">
+      <i class="ti ti-bell" style="font-size:17px;color:#fff"></i>
     </div>
+  </div>
+  <div class="ring">
+    <svg width="130" height="130" viewBox="0 0 130 130">
+      <circle class="rb" cx="65" cy="65" r="56"/>
+      <circle class="rf" id="cring" cx="65" cy="65" r="56"/>
+    </svg>
+    <div style="text-align:center;z-index:1">
+      <div style="font-size:24px;font-weight:600;color:#fff;line-height:1" id="tcal">0</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.65);margin-top:2px">calories today</div>
+      <div style="font-size:11px;color:var(--accent);font-weight:500;margin-top:3px" id="rcal">1,800 remaining</div>
+    </div>
+  </div>
+</div>
+<div class="mpills">
+  <div class="mp"><div class="v" style="color:var(--protein)" id="tp">0g</div><div class="l">Protein</div><div class="b"><div class="bf" id="bp" style="width:0%;background:var(--protein)"></div></div></div>
+  <div class="mp"><div class="v" style="color:var(--carbs)" id="tc">0g</div><div class="l">Carbs</div><div class="b"><div class="bf" id="bc" style="width:0%;background:var(--carbs)"></div></div></div>
+  <div class="mp"><div class="v" style="color:var(--fat)" id="tf">0g</div><div class="l">Fat</div><div class="b"><div class="bf" id="bf2" style="width:0%;background:var(--fat)"></div></div></div>
+  <div class="mp"><div class="v" style="color:var(--fiber)" id="tfi">0g</div><div class="l">Fiber</div><div class="b"><div class="bf" id="bfi" style="width:0%;background:var(--fiber)"></div></div></div>
+</div>
+<div class="scroll">
+  <div class="acard">
+    <div style="font-size:10px;font-weight:600;color:var(--brand);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">🤖 AI Coach</div>
+    <div style="font-size:13px;color:#2A4A38;line-height:1.5" id="acmsg">Start logging meals, Audrey! Tap 📸 to capture your first meal.</div>
+  </div>
+  <div class="stitle">Today's meals</div>
+  <div id="mlist"></div>
+  <div class="addbtn" onclick="openCam()"><i class="ti ti-plus" style="font-size:17px"></i>Capture a meal</div>
+</div>
+</div>
 
-    <div class="scrollable">
-      <div class="ai-card">
-        <div class="ai-tag">🤖 AI Coach</div>
-        <div class="ai-msg">Great start today, Audrey! Protein is on track. Try adding more fiber — aim for 5g more before dinner.</div>
-        <span class="ai-badge">🥦 Add vegetables</span>
-        <span class="ai-badge">💧 Drink water</span>
-      </div>
-
-      <div class="section-title">Today's meals</div>
-
-      <div class="meal-card" onclick="goTo('s-analysis')">
-        <div class="meal-row">
-          <div class="meal-icon" style="background:#FFF8E7;">🍳</div>
-          <div class="meal-info">
-            <div class="meal-name">Breakfast</div>
-            <div class="meal-items">Bubur ayam, teh manis</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="meal-cal">420</div>
-            <div class="meal-cal-lbl">kcal</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="meal-card" onclick="goTo('s-analysis')">
-        <div class="meal-row">
-          <div class="meal-icon" style="background:#E8F5EE;">🍱</div>
-          <div class="meal-info">
-            <div class="meal-name">Lunch</div>
-            <div class="meal-items">Nasi putih, ayam goreng, tempe, sayur</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="meal-cal">680</div>
-            <div class="meal-cal-lbl">kcal</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="meal-card" onclick="goTo('s-analysis')">
-        <div class="meal-row">
-          <div class="meal-icon" style="background:#FEF0EC;">☕</div>
-          <div class="meal-info">
-            <div class="meal-name">Snack</div>
-            <div class="meal-items">Kopi susu, pisang</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="meal-cal">340</div>
-            <div class="meal-cal-lbl">kcal</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="add-meal-btn" onclick="goTo('s-camera')">
-        <i class="ti ti-plus" style="font-size:18px;"></i>
-        Add dinner / snack
-      </div>
-
-      <div class="section-title">This week</div>
-      <div style="margin:0 20px 20px;background:var(--surface);border-radius:var(--radius);border:0.5px solid var(--border);padding:14px 16px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-          <span style="font-size:13px;color:var(--muted);">Avg calories</span>
-          <span style="font-size:13px;font-weight:600;">1,580 kcal</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-          <span style="font-size:13px;color:var(--muted);">Avg protein</span>
-          <span style="font-size:13px;font-weight:600;color:var(--protein)">102g / day</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-          <span style="font-size:13px;color:var(--muted);">Streak</span>
-          <span style="font-size:13px;font-weight:600;">🔥 7 days</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="font-size:13px;color:var(--muted);">Consistency</span>
-          <span style="font-size:13px;font-weight:600;color:var(--brand)">85%</span>
-        </div>
+<!-- CAMERA -->
+<div id="s-camera" class="screen">
+<div class="cwrap">
+  <div class="chdr">
+    <div class="cback" onclick="stopCam();goTo('s-home');sNav('nh')"><i class="ti ti-x" style="font-size:17px;color:#fff"></i></div>
+    <div style="font-size:15px;font-weight:500;color:#fff">Capture meal</div>
+  </div>
+  <div id="vc">
+    <div id="cph" style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <i class="ti ti-camera" style="font-size:36px;color:rgba(255,255,255,.2)"></i>
+      <span style="font-size:12px;color:rgba(255,255,255,.3)">Tap Camera to start</span>
+    </div>
+    <video id="video" autoplay playsinline muted webkit-playsinline x5-playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div id="aov" style="display:none" class="aoverlay">
+      <div class="asp"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="astep active" id="s1">📸 Processing image...</div>
+        <div class="astep" id="s2">🔍 Identifying foods...</div>
+        <div class="astep" id="s3">⚖️ Estimating portions...</div>
+        <div class="astep" id="s4">🧮 Calculating nutrition...</div>
       </div>
     </div>
   </div>
-
-  <!-- SCREEN 2: CAMERA -->
-  <div class="screen" id="s-camera" style="background:#111;">
-    <div class="cam-header">
-      <div class="cam-back" onclick="goTo('s-home')">
-        <i class="ti ti-x" style="font-size:18px;color:white;"></i>
-      </div>
-      <div class="cam-title">Capture meal</div>
-    </div>
-
-    <div id="cam-idle">
-      <div class="cam-preview cam-corners" style="cursor:pointer;" onclick="startAnalysis()">
-        <div class="cam-placeholder">
-          <i class="ti ti-camera"></i>
-          <span>Tap to take photo</span>
-        </div>
-      </div>
-      <div class="cam-options">
-        <div class="cam-opt" onclick="startAnalysis()">
-          <i class="ti ti-camera"></i>
-          <span>Camera</span>
-        </div>
-        <div class="cam-opt" onclick="startAnalysis()">
-          <i class="ti ti-photo"></i>
-          <span>Gallery</span>
-        </div>
-        <div class="cam-opt">
-          <i class="ti ti-barcode"></i>
-          <span>Barcode</span>
-        </div>
-        <div class="cam-opt">
-          <i class="ti ti-search"></i>
-          <span>Search</span>
-        </div>
-      </div>
-      <div style="padding:0 20px 16px;">
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.6;">
-          AI identifies food, estimates portions, and calculates full nutrition breakdown instantly
-        </div>
-      </div>
-      <div class="cam-cta" onclick="startAnalysis()">📸 &nbsp; Snap a photo</div>
-    </div>
-
-    <div id="cam-analyzing" style="display:none;">
-      <div class="meal-preview">
-        <div class="meal-preview-items">
-          <div class="food-blob"><div class="emoji">🍗</div><div class="name">Ayam goreng</div></div>
-          <div class="food-blob"><div class="emoji">🍚</div><div class="name">Nasi putih</div></div>
-          <div class="food-blob"><div class="emoji">🥬</div><div class="name">Sayur bayam</div></div>
-        </div>
-        <div class="analyzing-overlay">
-          <div class="analyzing-spinner"></div>
-          <div class="analyzing-text">Analyzing your meal...</div>
-        </div>
-      </div>
-    </div>
+  <div class="copts">
+    <div class="co" onclick="startCam()"><i class="ti ti-camera"></i><span>Camera</span></div>
+    <div class="co" onclick="document.getElementById('fi').click()"><i class="ti ti-photo"></i><span>Gallery</span></div>
+    <div class="co" onclick="flipCam()"><i class="ti ti-camera-rotate"></i><span>Flip</span></div>
+    <div class="co" onclick="stopCam();goTo('s-home');sNav('nh')"><i class="ti ti-x"></i><span>Cancel</span></div>
   </div>
+  <input type="file" id="fi" accept="image/*" style="display:none" onchange="handleFile(event)">
+  <div style="padding:0 16px 10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);flex-shrink:0">AI detects food, estimates portions &amp; calculates nutrition</div>
+  <div class="ccta" id="snapbtn" onclick="snap()">📸 &nbsp;Snap &amp; Analyze</div>
+  <div style="height:16px;flex-shrink:0"></div>
+</div>
+</div>
 
-  <!-- SCREEN 3: ANALYSIS -->
-  <div class="screen" id="s-analysis">
-    <div class="analysis-header">
-      <div class="back-btn" onclick="goTo('s-home')">
-        <i class="ti ti-arrow-left"></i>
-      </div>
-      <div>
-        <div class="analysis-title">Meal analysis</div>
-        <div style="font-size:12px;color:var(--muted);">Lunch · Today 12:34</div>
-      </div>
-      <div style="flex:1;"></div>
-      <div style="font-size:12px;color:var(--brand);font-weight:500;cursor:pointer;">Edit</div>
-    </div>
-
-    <div class="scrollable">
-      <div class="meal-photo-thumb">
-        <span class="emoji-lg">🍗</span>
-        <span class="emoji-lg">🍚</span>
-        <span class="emoji-lg">🥬</span>
-      </div>
-
-      <div style="padding:0 20px 10px;">
-        <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Detected foods</div>
-      </div>
-
-      <div class="food-items-list">
-        <div class="food-item">
-          <div class="food-item-icon">🍗</div>
-          <div class="food-item-info">
-            <div class="food-item-name">Ayam goreng (fried chicken)</div>
-            <div class="food-item-gram">~150g · 1 piece</div>
-          </div>
-          <div style="text-align:right;margin-right:8px;">
-            <div class="food-item-cal">285</div>
-            <div style="font-size:10px;color:var(--muted)">kcal</div>
-          </div>
-          <div class="food-item-edit"><i class="ti ti-edit"></i></div>
-        </div>
-        <div class="food-item">
-          <div class="food-item-icon">🍚</div>
-          <div class="food-item-info">
-            <div class="food-item-name">Nasi putih</div>
-            <div class="food-item-gram">~200g · 1 plate</div>
-          </div>
-          <div style="text-align:right;margin-right:8px;">
-            <div class="food-item-cal">260</div>
-            <div style="font-size:10px;color:var(--muted)">kcal</div>
-          </div>
-          <div class="food-item-edit"><i class="ti ti-edit"></i></div>
-        </div>
-        <div class="food-item">
-          <div class="food-item-icon">🥬</div>
-          <div class="food-item-info">
-            <div class="food-item-name">Sayur bayam tumis</div>
-            <div class="food-item-gram">~80g · side dish</div>
-          </div>
-          <div style="text-align:right;margin-right:8px;">
-            <div class="food-item-cal">45</div>
-            <div style="font-size:10px;color:var(--muted)">kcal</div>
-          </div>
-          <div class="food-item-edit"><i class="ti ti-edit"></i></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;color:var(--brand);font-size:13px;font-weight:500;">
-          <i class="ti ti-plus" style="font-size:16px;"></i>
-          Add missing food (e.g. sambal, tempe)
-        </div>
-      </div>
-
-      <div style="padding:16px 20px 10px;">
-        <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Nutrition breakdown</div>
-      </div>
-
-      <div class="nutrition-grid">
-        <div class="nutrition-card">
-          <div class="n-val" style="color:var(--protein)">38g</div>
-          <div class="n-lbl">Protein</div>
-          <div class="n-bar"><div class="n-fill" style="width:76%;background:var(--protein);"></div></div>
-        </div>
-        <div class="nutrition-card">
-          <div class="n-val" style="color:var(--carbs)">52g</div>
-          <div class="n-lbl">Carbohydrates</div>
-          <div class="n-bar"><div class="n-fill" style="width:65%;background:var(--carbs);"></div></div>
-        </div>
-        <div class="nutrition-card">
-          <div class="n-val" style="color:var(--fat)">14g</div>
-          <div class="n-lbl">Fat</div>
-          <div class="n-bar"><div class="n-fill" style="width:48%;background:var(--fat);"></div></div>
-        </div>
-        <div class="nutrition-card">
-          <div class="n-val" style="color:var(--fiber)">4g</div>
-          <div class="n-lbl">Fiber</div>
-          <div class="n-bar"><div class="n-fill" style="width:40%;background:var(--fiber);"></div></div>
-        </div>
-        <div class="nutrition-card">
-          <div class="n-val" style="color:var(--muted)">3g</div>
-          <div class="n-lbl">Sugar</div>
-          <div class="n-bar"><div class="n-fill" style="width:20%;background:#ccc;"></div></div>
-        </div>
-        <div class="nutrition-card">
-          <div class="n-val" style="color:var(--muted)">620mg</div>
-          <div class="n-lbl">Sodium</div>
-          <div class="n-bar"><div class="n-fill" style="width:55%;background:#F4A261;"></div></div>
-        </div>
-      </div>
-
-      <div class="total-row">
-        <div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.7);">Total meal</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.5);">3 items detected</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:22px;font-weight:600;color:white;">590 kcal</div>
-        </div>
-      </div>
-
-      <div style="margin:12px 20px;background:var(--brand-light);border-radius:var(--radius);padding:12px 14px;border:0.5px solid rgba(27,94,66,0.15);">
-        <div style="font-size:11px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">AI Note</div>
-        <div style="font-size:13px;color:#2A4A38;line-height:1.5;">Good protein from the ayam, Audrey! Consider adding tempe for extra fiber. Sodium is moderate — watch the sambal if you add it.</div>
-      </div>
-
-      <div class="save-btn" onclick="saveMeal()">Save meal to dashboard</div>
-    </div>
+<!-- ANALYSIS -->
+<div id="s-analysis" class="screen">
+<div class="anhdr">
+  <div class="bbtn" onclick="goTo('s-camera')"><i class="ti ti-arrow-left" style="font-size:17px"></i></div>
+  <div>
+    <div style="font-size:16px;font-weight:600">Meal analysis</div>
+    <div style="font-size:11px;color:var(--muted)" id="atime"></div>
   </div>
-
-  <!-- SCREEN 4: EXPORT -->
-  <div class="screen" id="s-export">
-    <div class="export-header">
-      <div style="font-size:22px;font-weight:600;">Export data</div>
-      <div style="font-size:13px;color:var(--muted);margin-top:4px;">Download your nutrition history as Excel</div>
+</div>
+<div class="scroll">
+  <img id="mphoto" class="mthumb" style="display:none" alt="Meal">
+  <div id="mthph" class="mthph">🍽️</div>
+  <div style="padding:0 16px 8px"><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Detected foods</div></div>
+  <div style="padding:0 16px" id="flist"></div>
+  <div style="padding:12px 16px 8px"><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Nutrition breakdown</div></div>
+  <div class="ngrid" id="ngrid"></div>
+  <div class="trow">
+    <div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7)">Total meal</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5)" id="icnt"></div>
     </div>
-
-    <div class="scrollable">
-      <div class="export-period">
-        <div class="period-chip active" onclick="setPeriod(this)">Today</div>
-        <div class="period-chip" onclick="setPeriod(this)">This week</div>
-        <div class="period-chip" onclick="setPeriod(this)">This month</div>
-        <div class="period-chip" onclick="setPeriod(this)">Custom range</div>
-      </div>
-
-      <div style="padding:12px 20px 8px;font-size:13px;color:var(--muted);">Preview — May 2026 monthly recap</div>
-      <div class="export-preview">
-        <div class="excel-header">
-          <i class="ti ti-file-spreadsheet"></i>
-          <span>NutriTrack_Audrey_May2026.xlsx</span>
-        </div>
-        <div class="excel-row head">
-          <div class="excel-cell" style="min-width:50px;">Date</div>
-          <div class="excel-cell" style="min-width:60px;">Meal</div>
-          <div class="excel-cell" style="min-width:55px;">Food items</div>
-          <div class="excel-cell" style="min-width:40px;">Kcal</div>
-          <div class="excel-cell" style="min-width:38px;">Prot</div>
-          <div class="excel-cell" style="min-width:38px;">Carbs</div>
-          <div class="excel-cell" style="flex:1;">AI notes</div>
-        </div>
-        <div class="excel-row">
-          <div class="excel-cell" style="min-width:50px;font-size:10px;">29 May</div>
-          <div class="excel-cell" style="min-width:60px;font-size:10px;">Lunch</div>
-          <div class="excel-cell" style="min-width:55px;font-size:10px;">Ayam, nasi, bayam</div>
-          <div class="excel-cell" style="min-width:40px;font-size:10px;color:var(--brand);font-weight:500;">590</div>
-          <div class="excel-cell" style="min-width:38px;font-size:10px;">38g</div>
-          <div class="excel-cell" style="min-width:38px;font-size:10px;">52g</div>
-          <div class="excel-cell" style="flex:1;font-size:9px;color:var(--muted);">Good protein</div>
-        </div>
-        <div class="excel-row">
-          <div class="excel-cell" style="min-width:50px;font-size:10px;">29 May</div>
-          <div class="excel-cell" style="min-width:60px;font-size:10px;">Breakfast</div>
-          <div class="excel-cell" style="min-width:55px;font-size:10px;">Bubur ayam</div>
-          <div class="excel-cell" style="min-width:40px;font-size:10px;color:var(--brand);font-weight:500;">420</div>
-          <div class="excel-cell" style="min-width:38px;font-size:10px;">18g</div>
-          <div class="excel-cell" style="min-width:38px;font-size:10px;">65g</div>
-          <div class="excel-cell" style="flex:1;font-size:9px;color:var(--muted);">Low fiber</div>
-        </div>
-        <div style="padding:8px 12px;font-size:10px;color:var(--muted);">+ 87 more rows · 2 sheets (Daily detail, Monthly summary)</div>
-      </div>
-
-      <div style="padding:0 20px 8px;margin-top:8px;">
-        <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px;">What's included</div>
-      </div>
-      <div class="export-options">
-        <div class="export-opt">
-          <div class="export-opt-icon" style="background:var(--brand-light);">
-            <i class="ti ti-salad" style="color:var(--brand);"></i>
-          </div>
-          <div class="export-opt-info">
-            <div class="export-opt-name">Daily meal log</div>
-            <div class="export-opt-desc">All meals, food items, portions, macros</div>
-          </div>
-          <i class="ti ti-check" style="color:var(--brand);font-size:16px;"></i>
-        </div>
-        <div class="export-opt">
-          <div class="export-opt-icon" style="background:#FDF5E0;">
-            <i class="ti ti-scale" style="color:var(--accent);"></i>
-          </div>
-          <div class="export-opt-info">
-            <div class="export-opt-name">Body measurements</div>
-            <div class="export-opt-desc">Weight, waist circumference trend</div>
-          </div>
-          <i class="ti ti-check" style="color:var(--brand);font-size:16px;"></i>
-        </div>
-        <div class="export-opt">
-          <div class="export-opt-icon" style="background:#E8F5EE;">
-            <i class="ti ti-robot" style="color:var(--brand);"></i>
-          </div>
-          <div class="export-opt-info">
-            <div class="export-opt-name">AI recommendations</div>
-            <div class="export-opt-desc">Daily coach notes and insights</div>
-          </div>
-          <i class="ti ti-check" style="color:var(--brand);font-size:16px;"></i>
-        </div>
-        <div class="export-opt">
-          <div class="export-opt-icon" style="background:#F0F7F3;">
-            <i class="ti ti-chart-bar" style="color:#1D6F42;"></i>
-          </div>
-          <div class="export-opt-info">
-            <div class="export-opt-name">Monthly summary sheet</div>
-            <div class="export-opt-desc">Averages, consistency %, trends</div>
-          </div>
-          <i class="ti ti-check" style="color:var(--brand);font-size:16px;"></i>
-        </div>
-      </div>
-
-      <div class="export-cta" onclick="showToast('📊 Excel file exported!')">
-        <i class="ti ti-download"></i>
-        Export NutriTrack_Audrey_May2026.xlsx
-      </div>
-    </div>
+    <div style="font-size:20px;font-weight:600;color:#fff" id="tcalr">0 kcal</div>
   </div>
+  <div style="margin:10px 16px" id="ainote"></div>
+  <div class="savebtn" onclick="saveMeal()">Save meal to dashboard</div>
+</div>
+</div>
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <div class="nav-item active" id="nav-home" onclick="goTo('s-home');setNav('nav-home')">
-      <i class="ti ti-home"></i>
-      <span>Home</span>
+<!-- EXPORT -->
+<div id="s-export" class="screen">
+<div class="exhdr">
+  <div style="font-size:20px;font-weight:600">Export data</div>
+  <div style="font-size:12px;color:var(--muted);margin-top:3px">Download your nutrition history</div>
+</div>
+<div class="periods">
+  <div class="pchip active" onclick="setPer(this)">Today</div>
+  <div class="pchip" onclick="setPer(this)">This week</div>
+  <div class="pchip" onclick="setPer(this)">This month</div>
+</div>
+<div class="scroll">
+  <div style="padding:8px 16px 6px;font-size:12px;color:var(--muted)">Preview</div>
+  <div class="eprev">
+    <div class="exhd"><i class="ti ti-file-spreadsheet" style="font-size:16px;color:#fff"></i><span style="font-size:12px;color:#fff;font-weight:500">NutriTrack_Audrey.csv</span></div>
+    <div class="exrow hd">
+      <div class="exc" style="min-width:44px">Date</div>
+      <div class="exc" style="min-width:50px">Meal</div>
+      <div class="exc" style="min-width:60px">Foods</div>
+      <div class="exc" style="min-width:34px">Kcal</div>
+      <div class="exc" style="min-width:30px">Prot</div>
+      <div class="exc" style="flex:1">AI note</div>
     </div>
-    <div class="nav-item" id="nav-chart" onclick="goTo('s-home');setNav('nav-chart')">
-      <i class="ti ti-chart-line"></i>
-      <span>Progress</span>
-    </div>
-    <div class="nav-item" style="justify-content:flex-end;padding-bottom:4px;" onclick="goTo('s-camera')">
-      <div class="nav-capture"><i class="ti ti-camera"></i></div>
-    </div>
-    <div class="nav-item" id="nav-export" onclick="goTo('s-export');setNav('nav-export')">
-      <i class="ti ti-download"></i>
-      <span>Export</span>
-    </div>
-    <div class="nav-item" id="nav-profile" onclick="setNav('nav-profile')">
-      <i class="ti ti-user"></i>
-      <span>Profile</span>
-    </div>
-  </nav>
+    <div id="eprows"></div>
+    <div style="padding:7px 10px;font-size:10px;color:var(--muted)" id="epcount">No meals logged yet</div>
+  </div>
+  <div style="padding:14px 16px 8px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">What's included</div>
+  <div class="exopts">
+    <div class="exopt"><div class="exoi" style="background:var(--brand-light)"><i class="ti ti-salad" style="color:var(--brand);font-size:18px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Daily meal log</div><div style="font-size:11px;color:var(--muted);margin-top:1px">All meals, foods, portions, macros</div></div><i class="ti ti-check" style="color:var(--brand);font-size:15px"></i></div>
+    <div class="exopt"><div class="exoi" style="background:#E8F5EE"><i class="ti ti-robot" style="color:var(--brand);font-size:18px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500">AI recommendations</div><div style="font-size:11px;color:var(--muted);margin-top:1px">Coach notes per meal</div></div><i class="ti ti-check" style="color:var(--brand);font-size:15px"></i></div>
+  </div>
+  <div class="excta" onclick="doExport()"><i class="ti ti-download" style="font-size:18px"></i>Download CSV</div>
+</div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<!-- NAV -->
+<nav class="bnav" id="bnav" style="display:none">
+  <div class="ni active" id="nh" onclick="goTo('s-home');sNav('nh')"><i class="ti ti-home"></i><span>Home</span></div>
+  <div class="ni" id="np"><i class="ti ti-chart-line"></i><span>Progress</span></div>
+  <div class="ni" style="justify-content:flex-end;padding-bottom:4px" onclick="openCam()"><div class="ncap"><i class="ti ti-camera"></i></div></div>
+  <div class="ni" id="ne" onclick="goTo('s-export');sNav('ne');refreshEx()"><i class="ti ti-download"></i><span>Export</span></div>
+  <div class="ni" id="ns" onclick="doSettings()"><i class="ti ti-settings"></i><span>Settings</span></div>
+</nav>
+
+<div class="toast" id="toast"></div>
 </div>
 
 <script>
-function goTo(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if (id === 's-home') setNav('nav-home');
-  if (id === 's-export') setNav('nav-export');
-  if (id === 's-camera') {
-    document.getElementById('cam-idle').style.display = 'block';
-    document.getElementById('cam-analyzing').style.display = 'none';
+let key=localStorage.getItem('ntk')||'';
+let meals=JSON.parse(localStorage.getItem('ntm')||'[]');
+let cur=null,imgData=null,stream=null,facing='environment';
+const CG=1800,PG=120,CRG=180,FG=60,FIG=25;
+
+window.onload=()=>{setG();if(key)showApp()};
+
+function setG(){
+  const h=new Date().getHours();
+  const el=document.getElementById('greet');
+  if(el)el.textContent=h<12?'Selamat pagi 👋':h<17?'Selamat siang 👋':'Selamat malam 👋';
+  const days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const mos=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const d=new Date();
+  const de=document.getElementById('dtext');
+  if(de)de.textContent=`${days[d.getDay()]}, ${d.getDate()} ${mos[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function saveKey(){
+  const v=document.getElementById('akey').value.trim();
+  if(!v.startsWith('sk-')){toast('⚠️ Enter a valid API key (starts with sk-)');return;}
+  key=v;localStorage.setItem('ntk',key);showApp();
+}
+
+function showApp(){
+  document.getElementById('s-setup').style.display='none';
+  document.getElementById('bnav').style.display='flex';
+  goTo('s-home');sNav('nh');dash();
+}
+
+function doSettings(){
+  if(confirm('Change API key?')){
+    localStorage.removeItem('ntk');key='';
+    document.getElementById('bnav').style.display='none';
+    document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');});
+    document.getElementById('s-setup').classList.add('active');
+    document.getElementById('s-setup').style.display='flex';
   }
 }
-function setNav(activeId) {
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const el = document.getElementById(activeId);
-  if (el) el.classList.add('active');
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el)el.classList.add('active');
 }
-function startAnalysis() {
-  document.getElementById('cam-idle').style.display = 'none';
-  document.getElementById('cam-analyzing').style.display = 'block';
-  setTimeout(() => { goTo('s-analysis'); }, 2200);
+function sNav(id){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const el=document.getElementById(id);if(el)el.classList.add('active');
 }
-function saveMeal() {
-  goTo('s-home');
-  showToast('✅ Meal saved to dashboard!');
+
+function openCam(){goTo('s-camera');setTimeout(startCam,150);}
+
+async function startCam(){
+  try{
+    if(stream)stream.getTracks().forEach(t=>t.stop());
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:960}},audio:false
+    });
+    const v=document.getElementById('video');
+    v.srcObject=stream;
+    await v.play();
+    v.style.display='block';
+    document.getElementById('cph').style.display='none';
+  }catch(e){
+    toast('📷 Camera blocked — use Gallery instead');
+    console.error(e);
+  }
 }
-function setPeriod(el) {
-  document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
+
+function stopCam(){
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  const v=document.getElementById('video');
+  v.style.display='none';v.srcObject=null;
+  document.getElementById('cph').style.display='flex';
 }
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+
+function flipCam(){facing=facing==='environment'?'user':'environment';startCam();}
+
+function snap(){
+  const v=document.getElementById('video');
+  if(!v.srcObject){toast('Tap Camera first to start');return;}
+  const c=document.getElementById('canvas');
+  c.width=v.videoWidth||640;c.height=v.videoHeight||480;
+  c.getContext('2d').drawImage(v,0,0);
+  imgData=c.toDataURL('image/jpeg',0.85);
+  analyze(imgData);
+}
+
+function handleFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{imgData=ev.target.result;analyze(imgData);};
+  r.readAsDataURL(f);e.target.value='';
+}
+
+async function analyze(img){
+  document.getElementById('aov').style.display='flex';
+  const sb=document.getElementById('snapbtn');
+  sb.style.opacity='.5';sb.style.pointerEvents='none';
+  const steps=['s1','s2','s3','s4'];let si=0;
+  const t=setInterval(()=>{
+    steps.forEach((s,i)=>document.getElementById(s).classList.toggle('active',i===si));
+    si=Math.min(si+1,3);
+  },700);
+  try{
+    const b64=img.split(',')[1];
+    const mime=img.split(';')[0].split(':')[1];
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+      body:JSON.stringify({
+        model:'gpt-4o',max_tokens:1000,
+        messages:[{role:'user',content:[
+          {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`,detail:'high'}},
+          {type:'text',text:`You are a nutrition expert. Analyze this food photo. Return ONLY valid JSON, no markdown.
+
+{
+  "foods":[{"name":"food name","emoji":"🍗","grams":150,"calories":250,"protein":20,"carbs":30,"fat":8,"fiber":3,"sugar":2,"sodium":400}],
+  "total":{"calories":500,"protein":40,"carbs":60,"fat":16,"fiber":6,"sugar":4,"sodium":800},
+  "ai_note":"1-2 sentence tip for visceral fat reduction",
+  "meal_type":"breakfast|lunch|dinner|snack"
+}
+
+Support Indonesian foods: nasi putih, ayam goreng, tempe, tahu, gado-gado, bakso, soto, mie ayam, rendang, nasi padang, bubur ayam, sambal, martabak, etc.`}
+        ]}]
+      })
+    });
+    clearInterval(t);
+    document.getElementById('aov').style.display='none';
+    sb.style.opacity='1';sb.style.pointerEvents='auto';
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||`API error ${res.status}`);}
+    const data=await res.json();
+    let txt=data.choices[0].message.content.trim().replace(/```json|```/g,'').trim();
+    const result=JSON.parse(txt);
+    result.imageData=img;result.timestamp=new Date().toISOString();
+    cur=result;stopCam();showResult(result);goTo('s-analysis');
+  }catch(e){
+    clearInterval(t);
+    document.getElementById('aov').style.display='none';
+    sb.style.opacity='1';sb.style.pointerEvents='auto';
+    toast('❌ '+(e.message||'Analysis failed'));console.error(e);
+  }
+}
+
+function showResult(r){
+  const now=new Date(r.timestamp);
+  document.getElementById('atime').textContent=`${r.meal_type||'Meal'} · ${now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+  const ph=document.getElementById('mphoto'),pp=document.getElementById('mthph');
+  if(r.imageData){ph.src=r.imageData;ph.style.display='block';pp.style.display='none';}
+  else{ph.style.display='none';pp.style.display='flex';pp.textContent=(r.foods||[]).map(f=>f.emoji).slice(0,3).join(' ')||'🍽️';}
+  document.getElementById('flist').innerHTML=(r.foods||[]).map(f=>`
+    <div class="fi">
+      <div style="font-size:20px;width:32px;text-align:center;flex-shrink:0">${f.emoji||'🍽️'}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${f.name}</div><div style="font-size:11px;color:var(--muted)">~${f.grams}g</div></div>
+      <div style="text-align:right;margin-right:4px"><div style="font-size:13px;font-weight:600;color:var(--brand)">${Math.round(f.calories)}</div><div style="font-size:10px;color:var(--muted)">kcal</div></div>
+    </div>`).join('');
+  const tt=r.total||{};
+  document.getElementById('ngrid').innerHTML=[
+    {v:`${Math.round(tt.protein||0)}g`,l:'Protein',c:'var(--protein)',p:Math.min((tt.protein||0)/PG*100,100)},
+    {v:`${Math.round(tt.carbs||0)}g`,l:'Carbs',c:'var(--carbs)',p:Math.min((tt.carbs||0)/CRG*100,100)},
+    {v:`${Math.round(tt.fat||0)}g`,l:'Fat',c:'var(--fat)',p:Math.min((tt.fat||0)/FG*100,100)},
+    {v:`${Math.round(tt.fiber||0)}g`,l:'Fiber',c:'var(--fiber)',p:Math.min((tt.fiber||0)/FIG*100,100)},
+    {v:`${Math.round(tt.sugar||0)}g`,l:'Sugar',c:'var(--muted)',p:Math.min((tt.sugar||0)/50*100,100)},
+    {v:`${Math.round(tt.sodium||0)}mg`,l:'Sodium',c:'#F4A261',p:Math.min((tt.sodium||0)/2300*100,100)},
+  ].map(n=>`<div class="nc"><div class="nv" style="color:${n.c}">${n.v}</div><div class="nl">${n.l}</div><div class="nb"><div class="nbf" style="width:${Math.round(n.p)}%;background:${n.c}"></div></div></div>`).join('');
+  document.getElementById('tcalr').textContent=`${Math.round(tt.calories||0)} kcal`;
+  document.getElementById('icnt').textContent=`${(r.foods||[]).length} items detected`;
+  document.getElementById('ainote').innerHTML=r.ai_note?`<div style="background:var(--brand-light);border-radius:var(--radius);padding:11px 13px;border:.5px solid rgba(27,94,66,.15)"><div style="font-size:10px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">🤖 AI Note</div><div style="font-size:13px;color:#2A4A38;line-height:1.5">${r.ai_note}</div></div>`:'';
+}
+
+function saveMeal(){
+  if(!cur)return;
+  meals.push(cur);localStorage.setItem('ntm',JSON.stringify(meals));
+  dash();goTo('s-home');sNav('nh');toast('✅ Meal saved!');cur=null;
+}
+
+function dash(){
+  const td=new Date().toDateString();
+  const tm=meals.filter(m=>new Date(m.timestamp).toDateString()===td);
+  let cal=0,prot=0,carbs=0,fat=0,fib=0;
+  tm.forEach(m=>{cal+=m.total?.calories||0;prot+=m.total?.protein||0;carbs+=m.total?.carbs||0;fat+=m.total?.fat||0;fib+=m.total?.fiber||0;});
+  document.getElementById('tcal').textContent=Math.round(cal).toLocaleString();
+  const rem=Math.max(0,CG-Math.round(cal));
+  document.getElementById('rcal').textContent=rem>0?`${rem.toLocaleString()} remaining`:'🎯 Goal reached!';
+  const circ=2*Math.PI*56;
+  const ring=document.getElementById('cring');
+  ring.style.strokeDasharray=circ;ring.style.strokeDashoffset=circ*(1-Math.min(cal/CG,1));
+  document.getElementById('tp').textContent=`${Math.round(prot)}g`;
+  document.getElementById('tc').textContent=`${Math.round(carbs)}g`;
+  document.getElementById('tf').textContent=`${Math.round(fat)}g`;
+  document.getElementById('tfi').textContent=`${Math.round(fib)}g`;
+  document.getElementById('bp').style.width=Math.min(prot/PG*100,100)+'%';
+  document.getElementById('bc').style.width=Math.min(carbs/CRG*100,100)+'%';
+  document.getElementById('bf2').style.width=Math.min(fat/FG*100,100)+'%';
+  document.getElementById('bfi').style.width=Math.min(fib/FIG*100,100)+'%';
+  let msg=tm.length===0?'Start logging meals, Audrey! Tap 📸 to capture your first meal.'
+    :prot<PG*.5?`Protein low today (${Math.round(prot)}g/${PG}g). Add ayam, tempe or tahu! 💪`
+    :fib<FIG*.5?`Fiber low today (${Math.round(fib)}g/${FIG}g). Add vegetables to reduce visceral fat. 🥦`
+    :cal>CG*.9?`Near calorie goal (${Math.round(cal)}/${CG} kcal). Keep dinner light! 🎯`
+    :`Great job, Audrey! ${Math.round(prot)}g protein so far. Keep it up! 🌿`;
+  document.getElementById('acmsg').textContent=msg;
+  const ic={breakfast:'🍳',lunch:'🍱',dinner:'🌙',snack:'☕'};
+  const ib={breakfast:'#FFF8E7',lunch:'#E8F5EE',dinner:'#EEF2FF',snack:'#FEF0EC'};
+  document.getElementById('mlist').innerHTML=tm.length===0
+    ?`<div style="text-align:center;padding:20px 16px;color:var(--muted);font-size:13px">No meals logged yet today</div>`
+    :tm.map((m,i)=>`<div class="mc" onclick="viewM(${meals.lastIndexOf(m)})"><div class="mr"><div class="mi" style="background:${ib[m.meal_type]||'#F0F0F0'}">${ic[m.meal_type]||'🍽️'}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;text-transform:capitalize">${m.meal_type||'Meal'}</div><div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(m.foods||[]).map(f=>f.name).join(', ')}</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:600;color:var(--brand)">${Math.round(m.total?.calories||0)}</div><div style="font-size:10px;color:var(--muted)">kcal</div></div></div></div>`).join('');
+}
+
+function viewM(i){cur=meals[i];showResult(cur);goTo('s-analysis');}
+
+function refreshEx(){
+  const td=new Date().toDateString();
+  const tm=meals.filter(m=>new Date(m.timestamp).toDateString()===td);
+  const rows=document.getElementById('eprows'),cnt=document.getElementById('epcount');
+  if(!tm.length){rows.innerHTML='';cnt.textContent='No meals logged yet';return;}
+  rows.innerHTML=tm.slice(0,3).map(m=>`<div class="exrow"><div class="exc" style="min-width:44px">${new Date(m.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div><div class="exc" style="min-width:50px;text-transform:capitalize">${m.meal_type||'meal'}</div><div class="exc" style="min-width:60px">${(m.foods||[]).map(f=>f.name).slice(0,2).join(', ')}</div><div class="exc" style="min-width:34px;color:var(--brand);font-weight:600">${Math.round(m.total?.calories||0)}</div><div class="exc" style="min-width:30px">${Math.round(m.total?.protein||0)}g</div><div class="exc" style="flex:1;color:var(--muted)">${(m.ai_note||'').slice(0,20)}...</div></div>`).join('');
+  cnt.textContent=`${tm.length} meal${tm.length!==1?'s':''} today · ${meals.length} total`;
+}
+
+function doExport(){
+  if(!meals.length){toast('No meals to export yet');return;}
+  const h=['Date','Time','Meal','Foods','Calories','Protein(g)','Carbs(g)','Fat(g)','Fiber(g)','Sugar(g)','Sodium(mg)','AI Note'];
+  const rows=meals.map(m=>{const d=new Date(m.timestamp);return[d.toLocaleDateString(),d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),m.meal_type||'',(m.foods||[]).map(f=>f.name).join(' | '),Math.round(m.total?.calories||0),Math.round(m.total?.protein||0),Math.round(m.total?.carbs||0),Math.round(m.total?.fat||0),Math.round(m.total?.fiber||0),Math.round(m.total?.sugar||0),Math.round(m.total?.sodium||0),(m.ai_note||'').replace(/,/g,' ')].join(',');});
+  const blob=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='NutriTrack_Audrey.csv';a.click();
+  toast('📊 CSV downloaded!');
+}
+
+function setPer(el){document.querySelectorAll('.pchip').forEach(c=>c.classList.remove('active'));el.classList.add('active');}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
 }
 </script>
+</body>
+</html>
